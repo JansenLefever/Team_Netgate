@@ -1,4 +1,4 @@
-# Team_NetGains
+# Team_NETGAINS
 
 THE PLAN:
 
