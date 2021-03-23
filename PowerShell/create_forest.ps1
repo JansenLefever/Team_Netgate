@@ -15,6 +15,7 @@ $safeModePw = ConvertTo-SecureString -String 'p@$$w0rd10' -AsPlainText -Force
 
 $forestParams = @{
     DomainName                      = "suntowater.globex.com"
+    DomainNetbiosName               = "suntowater"
     InstallDns                      = $true
     SafeModeAdministratorPassword   = $safeModePw
 }
