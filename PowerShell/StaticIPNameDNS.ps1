@@ -4,7 +4,7 @@
 
 # Renames Computer
 
-Rename-Computer -NewName "SunToWater" 
+Rename-Computer -NewName "S2W-Server" 
 
 # Global Var
 $adapter = (Get-NetAdapter).ifIndex
