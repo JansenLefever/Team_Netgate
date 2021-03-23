@@ -22,7 +22,7 @@ function Setup-StaticIp{
 
 function Setup-DNS{
   Install-WindowsFeature DNS -IncludeManagementTools
-  Set-DnsClientServerAddress -InterfaceAlias $adapter -ServerAddresses ("LocalHost")
+  Set-DnsClientServerAddress -InterfaceIndex $adapter -ServerAddresses ("LocalHost")
   Register-DnsClient
 }
 
