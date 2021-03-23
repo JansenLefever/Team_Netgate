@@ -1,3 +1,7 @@
+# Author: Jansen Levefer
+# Date 3/23/21
+# Project: NetGains
+
 # Renames Computer
 
 Rename-Computer -NewName "SunToWater" 
