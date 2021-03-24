@@ -12,10 +12,10 @@
 $ServerName = "S2W-Server"
 
 $ServerIPParams = @{
-  ip              = "10.10.1.5"
-  prefix          = "24"
-  GW              = "10.10.1.1"
-  InterfaceIndex  = (Get-NetAdapter).ifIndex
+  IPAddress             = "10.10.1.5"
+  PrefixLength          = "24"
+  DefaultGateway        = "10.10.1.1"
+  InterfaceIndex        = (Get-NetAdapter).ifIndex
 }
 
 
@@ -45,7 +45,7 @@ function Setup-DNS{
 # This function collects the portions of the script that set up the server (as opposed to the parts taht populate it), making it easier to run the initial setup on its own
 Function Configure-Server{
   # Renames Computer (From Jansen)
-  Rename-Computer -NewName @ServerName 
+  Rename-Computer -NewName $ServerName 
 
   # Sets a static IP (From Jansen)
   New-NetIPAddress @ServerIPParams
@@ -125,6 +125,8 @@ Configure-Server
 # $directory = Find-CSV
 # Import-Users($directory)
 
+
+Read-Host -Prompt "System will now restart. Press any key to continue: "
 Restart-Computer -Force 
 
 # End
