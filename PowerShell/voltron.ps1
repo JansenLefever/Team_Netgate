@@ -60,6 +60,25 @@ Function Find-CSV () {
   }
 }
 
+
+# This function create OUs from the departments in the csv of user data
+# It does so by importing the csv, using a for-loop to get a list of the contents of every item in the Department column fo the csv, reduces that list to unique elements, then loops through the list creating a new OU with that name (From Ethan)
+Function Create-OUs ($PathToCSV) {
+  # Write-Host $PathToCSV
+  $csv = Import-Csv -Path $PathToCSV
+  $Departments = @()
+  foreach($Dep in $csv.Department) {
+    $Departments += $Dep
+  }
+  # Write-Host $Departments
+  $Departments = $Departments | select -Unique
+  # Write-Host $Departments
+  foreach($Dep in $Departments) {
+    # Write-Host $($Dep)
+    New-ADOrganizationalUnit -Name $Dep
+  }
+}
+
 Function Import-Users ($PathToCSV) {
   $csv = Import-Csv -Path $PathToCSV
   Write-Host $csv
@@ -69,26 +88,32 @@ Function Import-Users ($PathToCSV) {
   #                                                                                'company'=$csv[$i].Company;
   #                                                                                'department'=$csv[$i].Department
   #                                                                                }
+  # I've worked off of Cody's script and taken some cues from this page: https://www.serveracademy.com/tutorials/create-ad-users-from-csv-with-powershell/?utm_source=Social&utm_medium=YouTube&utm_campaign=How+To+Create+AD+Users+from+CSV
+  # ~Ethan
   foreach($user in $csv) {
     # Format user details:
     $Username = ("$($user.FirstName).$($user.LastName)").Replace(" ", "")
+
+    # Password
+    $DefaultSecurePassword = ConvertTo-SecureString "$($user.FirstName[0, 3])$($user.LastName[0, 3])1234)!@#" -AsPlainText -Force
     $UserDetails = @{
       Name                    = "$($user.FirstName) $($user.LastName)"
       GivenName               = $user.FirstName
       Surname                 = $user.LastName
-      UserPrincipalName       = $Username
+      UserPrincipalName       = "$Username@globexpower.com"
       EmailAddress            = "$Username@globexpower.com"
       Title                   = $user.title
       Department              = $user.Department
       Company                 = $user.Company
-      # Path                    = $null
+      Path                    = "OU=$user.Department"
+      AccountPassword         = $DefaultSecurePassword
       ChangePasswordAtLogon   = $true
       Enabled                 = $true
     }
     
     # Create user
-    Write-Host @UserDetails
-    # New-ADUser @UserDetails -WhatIf
+    # Write-Host @UserDetails
+    New-ADUser @UserDetails
   }
 }
 
@@ -115,7 +140,9 @@ Function Step2 {
 Function Step3 {
   # This uses Find-CSV to get the location of the CSV from the user and format it, then stores that location as a variable and then calls Import-Users with that path as an argument (From Cody)
   $directory = Find-CSV
-  Import-Users($directory)
+  # Write-Host $directory
+  Create-OUs($directory)
+  # Import-Users($directory)
 }
 
 
