@@ -39,7 +39,27 @@ function Setup-DNS{
     Install-WindowsFeature DNS -IncludeManagementTools
     Set-DnsClientServerAddress -InterfaceIndex (Get-NetAdapter).ifIndex -ServerAddresses ("LocalHost")
     Register-DnsClient
-  }
+}
+
+
+# This function collects the portions of the script that set up the server (as opposed to the parts taht populate it), making it easier to run the initial setup on its own
+Function Configure-Server{
+  # Renames Computer (From Jansen)
+  Rename-Computer -NewName @ServerName 
+
+  # Sets a static IP (From Jansen)
+  New-NetIPAddress @ServerIPParams
+
+  # Run the Setup-DNS function to install, set, and register DNS (From Jansen)
+  Setup-DNS
+
+  # This line activates domain services, including management tools (From Ethan)
+  Add-WindowsFeature ad-domain-services -IncludeManagementTools
+
+  # This line adds a new forest (From Ethan)
+  Install-ADDSForest @forestParams
+}
+
 
 
 # Imports a CSV of users
@@ -92,23 +112,12 @@ Function Import-Users ($PathToCSV) {
 }
 
 
+
+
 # Main:
 
-#### This section covers Jansen's script
-# Renames Computer
-# Rename-Computer -NewName @ServerName 
-
-# Sets a static IP
-# New-NetIPAddress @ServerIPParams
-
-# Run the Setup-DNS function to install, set, and register DNS
-# Setup-DNS
-
-
-#### This section covers Ethan's scripts
-# This line adds DNS, including management tools
-# Add-WindowsFeature ad-domain-services -IncludeManagementTools
-# Install-ADDSForest @forestParams
+# Set up the server
+Configure-Server
 
 
 #### This section covers Cody's script

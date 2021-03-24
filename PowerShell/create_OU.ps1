@@ -15,4 +15,4 @@ $OUParams = @{
 }
 
 
-New-ADOrganizationalUnit @OUParams -WhatIf
+New-ADOrganizationalUnit @OUParams
