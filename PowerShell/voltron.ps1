@@ -105,7 +105,7 @@ Function Import-Users ($PathToCSV) {
       Title                   = $user.title
       Department              = $user.Department
       Company                 = $user.Company
-      Path                    = "OU=$user.Department"
+      Path                    = "OU=$($user.Department),dc=suntowater,dc=globexpower,dc=com"
       AccountPassword         = $DefaultSecurePassword
       ChangePasswordAtLogon   = $true
       Enabled                 = $true
@@ -142,7 +142,7 @@ Function Step3 {
   $directory = Find-CSV
   # Write-Host $directory
   Create-OUs($directory)
-  # Import-Users($directory)
+  Import-Users($directory)
 }
 
 
