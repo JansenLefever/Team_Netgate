@@ -122,9 +122,9 @@ Configure-Server
 
 #### This section covers Cody's script
 # This uses Find-CSV to get the location of the CSV from the user and format it, then stores that location as a variable and then calls Import-Users with that path as an argument
-$directory = Find-CSV
-Import-Users($directory)
+# $directory = Find-CSV
+# Import-Users($directory)
 
-# Restart-Computer -Force 
+Restart-Computer -Force 
 
 # End
