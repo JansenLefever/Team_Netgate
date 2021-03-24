@@ -138,6 +138,8 @@ Please enter 1, 2, or 3")
   if ( $SetupStep -eq 1 ){
     Write-Host "Running function Step1"
     Step1
+    Read-Host -Prompt "System will now restart. Press any key to continue: "
+    Restart-Computer -Force 
   }
   elseif ( $SetupStep -eq 2 ){
     Write-Host "Running function Step2"
