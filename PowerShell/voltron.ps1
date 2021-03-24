@@ -42,25 +42,6 @@ function Setup-DNS{
 }
 
 
-# This function collects the portions of the script that set up the server (as opposed to the parts taht populate it), making it easier to run the initial setup on its own
-Function Configure-Server{
-  # Renames Computer (From Jansen)
-  Rename-Computer -NewName $ServerName 
-
-  # Sets a static IP (From Jansen)
-  New-NetIPAddress @ServerIPParams
-
-  # Run the Setup-DNS function to install, set, and register DNS (From Jansen)
-  Setup-DNS
-
-  # This line activates domain services, including management tools (From Ethan)
-  Add-WindowsFeature ad-domain-services -IncludeManagementTools
-
-  # This line adds a new forest (From Ethan)
-  Install-ADDSForest @forestParams
-}
-
-
 
 # Imports a CSV of users
 # From Cody
@@ -112,6 +93,66 @@ Function Import-Users ($PathToCSV) {
 }
 
 
+Function Step1 {
+  # Renames Computer (From Jansen)
+  Rename-Computer -NewName $ServerName 
+
+  # Sets a static IP (From Jansen)
+  New-NetIPAddress @ServerIPParams
+
+  # Run the Setup-DNS function to install, set, and register DNS (From Jansen)
+  Setup-DNS
+}
+
+Function Step2 {
+  # This line activates domain services, including management tools (From Ethan)
+  Add-WindowsFeature ad-domain-services -IncludeManagementTools
+
+  # This line adds a new forest (From Ethan)
+  Install-ADDSForest @forestParams
+}
+
+Function Step3 {
+  # This uses Find-CSV to get the location of the CSV from the user and format it, then stores that location as a variable and then calls Import-Users with that path as an argument (From Cody)
+  $directory = Find-CSV
+  Import-Users($directory)
+}
+
+
+# This function has the user choose which part of the steup to execute
+# Configuring the server requires 2 reboots (one for the name change and one for promotion to DC), and then populating the server is another process
+# This function prompts the user to select stage 1, 2, or 3
+Function Configure-Server{
+  # This section prompts the user to make a selection
+  $SetupStep = [int](Read-Host -Prompt "What step of the process would you like to perform?
+
+    1. Rename the computer, set IP address, setup DNS, then restart.
+    2. Add AD Domain Services, add a forest, promote the computer to DC, then restart.
+    3. Populate the server with users and OUs (no restart needed).
+    
+Please enter 1, 2, or 3")
+
+  # Write-Host $SetupStep.GetType()
+  # Write-Host $SetupStep
+
+  if ( $SetupStep -eq 1 ){
+    Write-Host "Running function Step1"
+    Step1
+  }
+  elseif ( $SetupStep -eq 2 ){
+    Write-Host "Running function Step2"
+    Step2
+  }
+  elseif ( $SetupStep -eq 3 ){
+    Write-Host "Running function Step3"
+    Step3
+  }
+  else {
+    Write-Host "That wasn't a valid option! Please try again.`n"
+    Configure-Server
+  }
+}
+
 
 
 # Main:
@@ -120,13 +161,9 @@ Function Import-Users ($PathToCSV) {
 Configure-Server
 
 
-#### This section covers Cody's script
-# This uses Find-CSV to get the location of the CSV from the user and format it, then stores that location as a variable and then calls Import-Users with that path as an argument
-# $directory = Find-CSV
-# Import-Users($directory)
 
 
-Read-Host -Prompt "System will now restart. Press any key to continue: "
-Restart-Computer -Force 
+# Read-Host -Prompt "System will now restart. Press any key to continue: "
+# Restart-Computer -Force 
 
 # End
