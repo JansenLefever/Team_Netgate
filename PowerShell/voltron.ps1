@@ -4,6 +4,8 @@
 
 # Attribution is done in comments at the start of sections
 
+# Data set can be found here: https://docs.google.com/spreadsheets/d/1CNAyDx4KNrzvF1RCgWQOWl2XkB4cS7x78D9uK1dBEAk/edit?usp=sharing
+
 
 # Define Variables:
 
@@ -22,7 +24,7 @@ $ServerIPParams = @{
 # These two variables contain the configuration settings for setting up a domain and a forest
 $safeModePw = ConvertTo-SecureString -String 'p@$$w0rd10' -AsPlainText -Force
 
-$forestParams = @{
+$ForestParams = @{
   DomainName                      = "suntowater.globexpower.com"
   DomainNetbiosName               = "suntowater"
   InstallDns                      = $true
@@ -82,20 +84,14 @@ Function Create-OUs ($PathToCSV) {
 Function Import-Users ($PathToCSV) {
   $csv = Import-Csv -Path $PathToCSV
   Write-Host $csv
-  # for($i = 0; $i -lt $csv.length; $i++){
-  #     New-ADUser -Name $csv[$i].Name -Office $csv[$i].Office -OtherAttributes @{ 'title'=$csv[$i].Title;
-  #                                                                                'mail'=$csv[$i].Email;
-  #                                                                                'company'=$csv[$i].Company;
-  #                                                                                'department'=$csv[$i].Department
-  #                                                                                }
-  # I've worked off of Cody's script and taken some cues from this page: https://www.serveracademy.com/tutorials/create-ad-users-from-csv-with-powershell/?utm_source=Social&utm_medium=YouTube&utm_campaign=How+To+Create+AD+Users+from+CSV
-  # ~Ethan
+  # Ethan worked off of Cody's script and took some cues from this page: https://www.serveracademy.com/tutorials/create-ad-users-from-csv-with-powershell/?utm_source=Social&utm_medium=YouTube&utm_campaign=How+To+Create+AD+Users+from+CSV
   foreach($user in $csv) {
-    # Format user details:
+    # Format username
     $Username = ("$($user.FirstName).$($user.LastName)").Replace(" ", "")
 
-    # Password
-    $DefaultSecurePassword = ConvertTo-SecureString "$($user.FirstName[0, 3])$($user.LastName[0, 3])1234)!@#" -AsPlainText -Force
+    # Generate a default password (ex: from Cody Wishart, CodWis1234)
+    $DefaultSecurePassword = ConvertTo-SecureString "$($($user.FirstName[0..2] -join ''))$($($user.LastName[0..3] -join ''))1234)!@#" -AsPlainText -Force
+    
     $UserDetails = @{
       Name                    = "$($user.FirstName) $($user.LastName)"
       GivenName               = $user.FirstName
@@ -118,23 +114,23 @@ Function Import-Users ($PathToCSV) {
 }
 
 
-Function Step1 {
+Function Step1 ($newname, $newIPParams) {
   # Renames Computer (From Jansen)
-  Rename-Computer -NewName $ServerName 
+  Rename-Computer -NewName $newname 
 
   # Sets a static IP (From Jansen)
-  New-NetIPAddress @ServerIPParams
+  New-NetIPAddress @newIPParams
 
   # Run the Setup-DNS function to install, set, and register DNS (From Jansen)
   Setup-DNS
 }
 
-Function Step2 {
+Function Step2 ($newForestParams) {
   # This line activates domain services, including management tools (From Ethan)
   Add-WindowsFeature ad-domain-services -IncludeManagementTools
 
   # This line adds a new forest (From Ethan)
-  Install-ADDSForest @forestParams
+  Install-ADDSForest @NewForestParams
 }
 
 Function Step3 {
@@ -153,9 +149,9 @@ Function Configure-Server{
   # This section prompts the user to make a selection
   $SetupStep = [int](Read-Host -Prompt "What step of the process would you like to perform?
 
-    1. Rename the computer, set IP address, setup DNS, then restart.
-    2. Add AD Domain Services, add a forest, promote the computer to DC, then restart.
-    3. Populate the server with users and OUs (no restart needed).
+    1. Rename the computer to $ServerName, set IP address to $($ServerIPParams.IPAddress), setup DNS , then restart.
+    2. Add AD Domain Services, add a forest, create a domain named $($forestParams.DomainName), promote the computer to DC, then restart.
+    3. Populate the server with users and OUs from a CSV file (no restart needed).
     
 Please enter 1, 2, or 3")
 
@@ -164,13 +160,15 @@ Please enter 1, 2, or 3")
 
   if ( $SetupStep -eq 1 ){
     Write-Host "Running function Step1"
-    Step1
+    Step1($ServerName, $ServerIPParams)
     Read-Host -Prompt "System will now restart. Press any key to continue: "
     Restart-Computer -Force 
   }
   elseif ( $SetupStep -eq 2 ){
     Write-Host "Running function Step2"
-    Step2
+    Step2($ForestParams)
+    Read-Host -Prompt "System will now restart. Press any key to continue: "
+    Restart-Computer -Force 
   }
   elseif ( $SetupStep -eq 3 ){
     Write-Host "Running function Step3"
@@ -190,9 +188,5 @@ Please enter 1, 2, or 3")
 Configure-Server
 
 
-
-
-# Read-Host -Prompt "System will now restart. Press any key to continue: "
-# Restart-Computer -Force 
 
 # End
