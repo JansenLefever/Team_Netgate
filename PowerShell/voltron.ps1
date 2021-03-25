@@ -114,23 +114,23 @@ Function Import-Users ($PathToCSV) {
 }
 
 
-Function Step1 ($newname, $newIPParams) {
+Function Step1 {
   # Renames Computer (From Jansen)
-  Rename-Computer -NewName $newname 
+  Rename-Computer -NewName $ServerName 
 
   # Sets a static IP (From Jansen)
-  New-NetIPAddress @newIPParams
+  New-NetIPAddress @ServerIPParams
 
   # Run the Setup-DNS function to install, set, and register DNS (From Jansen)
   Setup-DNS
 }
 
-Function Step2 ($newForestParams) {
+Function Step2 {
   # This line activates domain services, including management tools (From Ethan)
   Add-WindowsFeature ad-domain-services -IncludeManagementTools
 
   # This line adds a new forest (From Ethan)
-  Install-ADDSForest @NewForestParams
+  Install-ADDSForest @ForestParams
 }
 
 Function Step3 {
@@ -160,13 +160,13 @@ Please enter 1, 2, or 3")
 
   if ( $SetupStep -eq 1 ){
     Write-Host "Running function Step1"
-    Step1($ServerName, $ServerIPParams)
+    Step1
     Read-Host -Prompt "System will now restart. Press any key to continue: "
     Restart-Computer -Force 
   }
   elseif ( $SetupStep -eq 2 ){
     Write-Host "Running function Step2"
-    Step2($ForestParams)
+    Step2
     Read-Host -Prompt "System will now restart. Press any key to continue: "
     Restart-Computer -Force 
   }
